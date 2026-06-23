@@ -26,13 +26,13 @@ echo 'export PATH="$HOME/.mint/bin:$PATH"' >> ~/.zshrc
 You can also run `snote` without linking it globally:
 
 ```bash
-mint run 1amageek/swift-note snote 1 + 2
+mint run 1amageek/swift-note snote '1 + 2'
 ```
 
 ## Quick Start
 
 ```bash
-snote 1 + 2
+snote '1 + 2'
 ```
 
 Output:
@@ -48,23 +48,35 @@ The examples below use `snote` as the command name. If you are developing from a
 ```mermaid
 flowchart LR
   A["Swift code"] --> B["SwiftSyntax instrumentation"]
-  B --> C["Cached SwiftPM runner"]
-  C --> D["Swift execution"]
-  D --> E["Line observations"]
-  E --> F["Text or JSON output"]
+  B --> C["Cached runner"]
+  C --> D["swiftc or SwiftPM build"]
+  D --> E["Swift execution"]
+  E --> F["Line observations"]
+  F --> G["Text or JSON output"]
 ```
 
 | Mode | Command | Output |
 |---|---|---|
-| Code | `snote 1 + 2` | Compact line result |
+| Code | `snote '1 + 2'` | Compact line result |
 | Quoted code | `snote 'let x = 10; x * 2'` | Compact line results |
 | File | `snote path/to/file.swift` | Compact line results |
 | Stdin | `snote --stdin` | Compact line results |
-| JSON | `snote --json 1 + 2` | Structured report |
+| JSON | `snote --json '1 + 2'` | Structured report |
 
 ## Output
 
 Default output is optimized for reading in a terminal:
+
+```bash
+snote 'let x = 10\nx * 2'
+```
+
+```text
+1  x = 10
+2  20
+```
+
+When code is passed as a quoted shell argument, `\n` outside Swift string literals is treated as a line break. For longer code, stdin is usually clearer:
 
 ```bash
 printf 'let x = 10\nx * 2\n' | snote --stdin
@@ -78,7 +90,7 @@ printf 'let x = 10\nx * 2\n' | snote --stdin
 JSON output is the stable protocol for agents and tools:
 
 ```bash
-snote --json 1 + 2
+snote --json '1 + 2'
 ```
 
 ```json
@@ -118,7 +130,7 @@ Use `--package <path>` when the snippet should import local SwiftPM library prod
 snote --package . 'import MyLibrary; makeValue()'
 ```
 
-The generated runner is cached under `~/.snote/cache/`.
+The generated runner is cached under `~/.snote/cache/`. Plain snippets use a direct `swiftc` runner; `--package` uses SwiftPM so local package products can be linked.
 
 ## Mint Usage
 
@@ -126,7 +138,7 @@ The generated runner is cached under `~/.snote/cache/`.
 |---|---|
 | Install Mint | `brew install mint` |
 | Install `snote` | `mint install 1amageek/swift-note` |
-| Run without global link | `mint run 1amageek/swift-note snote 1 + 2` |
+| Run without global link | `mint run 1amageek/swift-note snote '1 + 2'` |
 | Show installed path | `mint which 1amageek/swift-note snote` |
 | List installed tools | `mint list` |
 | Reinstall from the current branch or tag | `mint install 1amageek/swift-note --force` |
@@ -136,7 +148,7 @@ Use a version, branch, or commit by appending it to the package reference:
 
 ```bash
 mint install 1amageek/swift-note@main
-mint run 1amageek/swift-note@main snote --json 1 + 2
+mint run 1amageek/swift-note@main snote --json '1 + 2'
 ```
 
 For a project-local tool definition, add a `Mintfile`:
@@ -149,7 +161,7 @@ Then install the tools declared in that file:
 
 ```bash
 mint bootstrap --link
-snote 1 + 2
+snote '1 + 2'
 ```
 
 ## CLI

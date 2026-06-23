@@ -8,6 +8,13 @@ public struct RunnerExecutor: Sendable {
     }
 
     public func execute(runner: GeneratedRunner) throws -> RunReport {
+        if runner.needsBuild {
+            let buildExecution = try build(runner: runner)
+            if buildExecution.exitCode != 0 {
+                return failedReport(from: buildExecution)
+            }
+        }
+
         let reportURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathExtension("json")
@@ -22,8 +29,8 @@ public struct RunnerExecutor: Sendable {
         }
 
         let execution = try processExecutor.run(
-            executable: "/usr/bin/env",
-            arguments: ["swift", "run", "--package-path", runner.directory.path, "Runner"],
+            executable: runner.executableURL.path,
+            arguments: [],
             environment: ["SWIFT_NOTE_REPORT_PATH": reportURL.path]
         )
 
@@ -39,6 +46,32 @@ public struct RunnerExecutor: Sendable {
             )
         }
 
+        return failedReport(from: execution)
+    }
+
+    private func build(runner: GeneratedRunner) throws -> CommandExecution {
+        switch runner.buildStrategy {
+        case .swiftCompiler:
+            return try processExecutor.run(
+                executable: "/usr/bin/env",
+                arguments: [
+                    "swiftc",
+                    "-parse-as-library",
+                    "-suppress-warnings",
+                    "-o",
+                    runner.executableURL.path,
+                    runner.sourceURL.path,
+                ]
+            )
+        case .swiftPackage:
+            return try processExecutor.run(
+                executable: "/usr/bin/env",
+                arguments: ["swift", "build", "--package-path", runner.directory.path, "--product", "Runner"]
+            )
+        }
+    }
+
+    private func failedReport(from execution: CommandExecution) -> RunReport {
         let message = [execution.stderr, execution.stdout]
             .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             .joined(separator: "\n")

@@ -11,7 +11,7 @@ public struct InputResolver: Sendable {
 
         switch inputMode {
         case .eval(let code):
-            return SourceInput(code: code, displayName: "<eval>")
+            return SourceInput(code: normalizeEscapedLineBreaks(in: code), displayName: "<eval>")
         case .file(let path):
             return try resolveFile(path: path, lineRange: configuration.lineRange)
         case .stdin(let explicit):
@@ -68,5 +68,72 @@ public struct InputResolver: Sendable {
             .standardizedFileURL
             .path
     }
-}
 
+    private func normalizeEscapedLineBreaks(in code: String) -> String {
+        enum Mode {
+            case code
+            case singleLineString
+            case multilineString
+        }
+
+        var output = ""
+        var mode = Mode.code
+        var index = code.startIndex
+
+        while index < code.endIndex {
+            switch mode {
+            case .code:
+                if code[index] == "\\",
+                   let nextIndex = code.index(index, offsetBy: 1, limitedBy: code.endIndex),
+                   nextIndex < code.endIndex,
+                   code[nextIndex] == "n"
+                {
+                    output.append("\n")
+                    index = code.index(after: nextIndex)
+                } else if code[index...].hasPrefix("\"\"\"") {
+                    output.append("\"\"\"")
+                    index = code.index(index, offsetBy: 3)
+                    mode = .multilineString
+                } else if code[index] == #"""# {
+                    output.append(code[index])
+                    index = code.index(after: index)
+                    mode = .singleLineString
+                } else {
+                    output.append(code[index])
+                    index = code.index(after: index)
+                }
+
+            case .singleLineString:
+                if code[index] == "\\" {
+                    output.append(code[index])
+                    let nextIndex = code.index(after: index)
+                    if nextIndex < code.endIndex {
+                        output.append(code[nextIndex])
+                        index = code.index(after: nextIndex)
+                    } else {
+                        index = nextIndex
+                    }
+                } else if code[index] == #"""# {
+                    output.append(code[index])
+                    index = code.index(after: index)
+                    mode = .code
+                } else {
+                    output.append(code[index])
+                    index = code.index(after: index)
+                }
+
+            case .multilineString:
+                if code[index...].hasPrefix("\"\"\"") {
+                    output.append("\"\"\"")
+                    index = code.index(index, offsetBy: 3)
+                    mode = .code
+                } else {
+                    output.append(code[index])
+                    index = code.index(after: index)
+                }
+            }
+        }
+
+        return output
+    }
+}

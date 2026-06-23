@@ -10,6 +10,13 @@ final class CommandLineIntegrationTests: XCTestCase {
         XCTAssertEqual(execution.stdout, "1  3\n")
     }
 
+    func testCommandLineTreatsEscapedLineBreakAsEvalLineBreak() throws {
+        let execution = try runSnote(["-e", "let x = 10\\n x * 2"])
+
+        XCTAssertEqual(execution.exitCode, 0, execution.stderr)
+        XCTAssertEqual(execution.stdout, "1  x = 10\n2  20\n")
+    }
+
     func testCommandLineEmitsDecodableJSONOutput() throws {
         let execution = try runSnote([
             "--json",

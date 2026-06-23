@@ -1,6 +1,6 @@
 # snote Specification
 
-`snote` is a typed Swift scratchpad runner. It accepts a one-liner, a Swift file, or stdin, instruments top-level Swift code, executes it in a cached SwiftPM runner, and returns line-by-line observations.
+`snote` is a typed Swift scratchpad runner. It accepts a one-liner, a Swift file, or stdin, instruments top-level Swift code, executes it through a cached runner, and returns line-by-line observations.
 
 ## User Contract
 
@@ -8,9 +8,10 @@
 |---|---|
 | Command | `snote <code>`, `snote -e <code>`, `snote <file>`, `snote --stdin`, `snote --json`, `snote --watch <file>` |
 | Input | Swift top-level code with imports, declarations, `let` / `var` bindings, and expression statements |
+| Eval line breaks | In eval code, `\n` outside Swift string literals is normalized to a source line break |
 | Observation | Top-level `let` / `var` bindings and top-level expression statements are recorded in source order |
 | Output | Human-readable text by default; JSON with `--json` |
-| Runner | Code is executed through a generated SwiftPM runner under `~/.snote/cache/` |
+| Runner | Plain snippets use a cached direct `swiftc` runner; `--package` uses a cached SwiftPM runner under `~/.snote/cache/` |
 | Package context | `--package <path>` allows the generated runner to depend on local library products |
 | Line range | `--lines <start:end>` evaluates a selected file range while preserving original line numbers |
 
@@ -20,10 +21,13 @@
 flowchart LR
   A["CLI arguments"] --> B["Source input"]
   B --> C["SwiftSyntax instrumentation"]
-  C --> D["Cached SwiftPM runner"]
-  D --> E["Swift execution"]
-  E --> F["RunReport"]
-  F --> G["Text or JSON output"]
+  C --> D["Cached runner"]
+  D --> E{"Package context?"}
+  E -->|"No"| F["swiftc executable"]
+  E -->|"Yes"| G["SwiftPM executable"]
+  F --> H["RunReport"]
+  G --> H
+  H --> I["Text or JSON output"]
 ```
 
 ## JSON Protocol

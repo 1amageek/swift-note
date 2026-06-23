@@ -20,7 +20,7 @@ flowchart TD
 | No `print` ceremony | Users write values. The tool records them. |
 | Line results over final result | A scratchpad is useful because each meaningful line leaves evidence. |
 | JSON is a product surface | Agent workflows need stable structured output, not scraped terminal text. |
-| Fast enough now, faster later | The runner cache is the first step toward incremental and daemon-backed execution. |
+| Fast default path | Plain snippets should avoid unnecessary SwiftPM work; package-aware runs pay that cost only when linking local products. |
 | Tests remain tests | `snote` helps exploration; it does not replace formal test suites. |
 
 ## Design Boundaries

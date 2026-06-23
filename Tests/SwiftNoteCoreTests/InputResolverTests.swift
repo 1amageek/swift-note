@@ -2,6 +2,22 @@ import XCTest
 @testable import SwiftNoteCore
 
 final class InputResolverTests: XCTestCase {
+    func testNormalizesEscapedLineBreaksInEvalInput() throws {
+        let configuration = CommandConfiguration(inputMode: .eval("let x = 10\\nx * 2"))
+
+        let input = try InputResolver().resolve(configuration: configuration)
+
+        XCTAssertEqual(input.code, "let x = 10\nx * 2")
+    }
+
+    func testKeepsEscapedLineBreaksInsideStringLiterals() throws {
+        let configuration = CommandConfiguration(inputMode: .eval(#"let text = "\n"\ntext.count"#))
+
+        let input = try InputResolver().resolve(configuration: configuration)
+
+        XCTAssertEqual(input.code, #"let text = "\n""# + "\ntext.count")
+    }
+
     func testReadsSelectedFileLinesWithOriginalLineOffset() throws {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)

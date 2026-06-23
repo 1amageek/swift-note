@@ -8,7 +8,7 @@ public struct RunnerBuilder: Sendable {
     }
 
     public func prepare(source: String, packageContext: PackageContext?) throws -> GeneratedRunner {
-        let directory = cacheDirectory(for: packageContext)
+        let directory = cacheDirectory(for: packageContext, source: source)
         return try prepare(source: source, in: directory, packageContext: packageContext)
     }
 
@@ -17,7 +17,7 @@ public struct RunnerBuilder: Sendable {
         packageContext: PackageContext?,
         body: (GeneratedRunner) throws -> T
     ) throws -> T {
-        let directory = cacheDirectory(for: packageContext)
+        let directory = cacheDirectory(for: packageContext, source: source)
         let lockURL = directory.appendingPathComponent(".snote.lock")
 
         return try FileLock.withExclusiveLock(at: lockURL) {
@@ -27,22 +27,64 @@ public struct RunnerBuilder: Sendable {
     }
 
     private func prepare(source: String, in directory: URL, packageContext: PackageContext?) throws -> GeneratedRunner {
-        let sourcesDirectory = directory.appendingPathComponent("Sources/Runner", isDirectory: true)
-        if FileManager.default.fileExists(atPath: sourcesDirectory.path) {
-            try FileManager.default.removeItem(at: sourcesDirectory)
+        if packageContext == nil {
+            return try prepareStandaloneRunner(source: source, in: directory)
         }
+
+        return try preparePackageRunner(source: source, in: directory, packageContext: packageContext)
+    }
+
+    private func prepareStandaloneRunner(source: String, in directory: URL) throws -> GeneratedRunner {
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+
+        let sourceURL = directory.appendingPathComponent("RunnerEntry.swift")
+        let executableURL = directory.appendingPathComponent("Runner")
+        let sourceChanged = try writeIfChanged(source, to: sourceURL)
+        let executableMissing = !FileManager.default.fileExists(atPath: executableURL.path)
+
+        return GeneratedRunner(
+            directory: directory,
+            sourceURL: sourceURL,
+            executableURL: executableURL,
+            needsBuild: sourceChanged || executableMissing,
+            buildStrategy: .swiftCompiler
+        )
+    }
+
+    private func preparePackageRunner(source: String, in directory: URL, packageContext: PackageContext?) throws -> GeneratedRunner {
+        let sourcesDirectory = directory.appendingPathComponent("Sources/Runner", isDirectory: true)
         try FileManager.default.createDirectory(at: sourcesDirectory, withIntermediateDirectories: true)
 
         let manifestURL = directory.appendingPathComponent("Package.swift")
         let sourceURL = sourcesDirectory.appendingPathComponent("RunnerEntry.swift")
+        let executableURL = directory.appendingPathComponent(".build/debug/Runner")
 
-        try manifest(for: packageContext).write(to: manifestURL, atomically: true, encoding: .utf8)
-        try source.write(to: sourceURL, atomically: true, encoding: .utf8)
+        let manifestChanged = try writeIfChanged(manifest(for: packageContext), to: manifestURL)
+        let sourceChanged = try writeIfChanged(source, to: sourceURL)
+        let executableMissing = !FileManager.default.fileExists(atPath: executableURL.path)
 
-        return GeneratedRunner(directory: directory, sourceURL: sourceURL)
+        return GeneratedRunner(
+            directory: directory,
+            sourceURL: sourceURL,
+            executableURL: executableURL,
+            needsBuild: manifestChanged || sourceChanged || executableMissing,
+            buildStrategy: .swiftPackage
+        )
     }
 
-    private func cacheDirectory(for packageContext: PackageContext?) -> URL {
+    private func writeIfChanged(_ content: String, to url: URL) throws -> Bool {
+        if FileManager.default.fileExists(atPath: url.path) {
+            let existing = try String(contentsOf: url, encoding: .utf8)
+            if existing == content {
+                return false
+            }
+        }
+
+        try content.write(to: url, atomically: true, encoding: .utf8)
+        return true
+    }
+
+    private func cacheDirectory(for packageContext: PackageContext?, source: String) -> URL {
         let base: URL
         if let cacheBaseURL {
             base = cacheBaseURL
@@ -59,7 +101,10 @@ public struct RunnerBuilder: Sendable {
             return base.appendingPathComponent("package-\(StableHash.hex(packageContext.path))", isDirectory: true)
         }
 
-        return base.appendingPathComponent("default", isDirectory: true)
+        let sourceKey = StableHash.hex("swiftc-v1\n\(source)")
+        return base
+            .appendingPathComponent("default", isDirectory: true)
+            .appendingPathComponent("snippet-\(sourceKey)", isDirectory: true)
     }
 
     private func manifest(for packageContext: PackageContext?) -> String {

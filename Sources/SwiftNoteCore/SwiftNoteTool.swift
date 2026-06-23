@@ -1,7 +1,7 @@
 import Foundation
 
 public struct SwiftNoteTool: Sendable {
-    public static let version = "0.1.1"
+    public static let version = "0.1.2"
 
     private let argumentParser: ArgumentParser
     private let inputResolver: InputResolver
