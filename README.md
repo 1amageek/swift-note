@@ -26,13 +26,13 @@ echo 'export PATH="$HOME/.mint/bin:$PATH"' >> ~/.zshrc
 You can also run `snote` without linking it globally:
 
 ```bash
-mint run 1amageek/swift-note snote '1 + 2'
+mint run 1amageek/swift-note snote -e '1 + 2'
 ```
 
 ## Quick Start
 
 ```bash
-snote '1 + 2'
+snote -e '1 + 2'
 ```
 
 Output:
@@ -56,11 +56,11 @@ flowchart LR
 
 | Mode | Command | Output |
 |---|---|---|
-| One-liner | `snote '1 + 2'` | Compact line result |
-| Explicit eval | `snote -e 'let x = 10; x * 2'` | Compact line results |
+| Eval | `snote -e '1 + 2'` | Compact line result |
+| Multi-line eval | `snote -e 'let x = 10; x * 2'` | Compact line results |
 | File | `snote path/to/file.swift` | Compact line results |
 | Stdin | `snote --stdin` | Compact line results |
-| JSON | `snote --json '1 + 2'` | Structured report |
+| JSON | `snote --json -e '1 + 2'` | Structured report |
 
 ## Output
 
@@ -78,7 +78,7 @@ printf 'let x = 10\nx * 2\n' | snote --stdin
 JSON output is the stable protocol for agents and tools:
 
 ```bash
-snote --json '1 + 2'
+snote --json -e '1 + 2'
 ```
 
 ```json
@@ -126,7 +126,7 @@ The generated runner is cached under `~/.snote/cache/`.
 |---|---|
 | Install Mint | `brew install mint` |
 | Install `snote` | `mint install 1amageek/swift-note` |
-| Run without global link | `mint run 1amageek/swift-note snote '1 + 2'` |
+| Run without global link | `mint run 1amageek/swift-note snote -e '1 + 2'` |
 | Show installed path | `mint which 1amageek/swift-note snote` |
 | List installed tools | `mint list` |
 | Reinstall from the current branch or tag | `mint install 1amageek/swift-note --force` |
@@ -136,7 +136,7 @@ Use a version, branch, or commit by appending it to the package reference:
 
 ```bash
 mint install 1amageek/swift-note@main
-mint run 1amageek/swift-note@main snote --json '1 + 2'
+mint run 1amageek/swift-note@main snote --json -e '1 + 2'
 ```
 
 For a project-local tool definition, add a `Mintfile`:
@@ -149,7 +149,7 @@ Then install the tools declared in that file:
 
 ```bash
 mint bootstrap --link
-snote '1 + 2'
+snote -e '1 + 2'
 ```
 
 ## CLI
