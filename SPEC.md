@@ -6,7 +6,7 @@
 
 | Area | Requirement |
 |---|---|
-| Command | `snote -e <code>`, `snote <file>`, `snote --stdin`, `snote --json`, `snote --watch <file>` |
+| Command | `snote <code>`, `snote -e <code>`, `snote <file>`, `snote --stdin`, `snote --json`, `snote --watch <file>` |
 | Input | Swift top-level code with imports, declarations, `let` / `var` bindings, and expression statements |
 | Observation | Top-level `let` / `var` bindings and top-level expression statements are recorded in source order |
 | Output | Human-readable text by default; JSON with `--json` |

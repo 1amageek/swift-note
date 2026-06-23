@@ -16,6 +16,18 @@ final class ArgumentParserTests: XCTestCase {
         XCTAssertEqual(configuration.inputMode, .eval("let a = 1; a + 2"))
     }
 
+    func testParsesPositionalCodeAsEval() throws {
+        let configuration = try ArgumentParser().parse(arguments: ["1", "+", "2"])
+
+        XCTAssertEqual(configuration.inputMode, .eval("1 + 2"))
+    }
+
+    func testParsesQuotedPositionalCodeAsEval() throws {
+        let configuration = try ArgumentParser().parse(arguments: ["let a = 1; a + 2"])
+
+        XCTAssertEqual(configuration.inputMode, .eval("let a = 1; a + 2"))
+    }
+
     func testInfersExistingPositionalPathAsFile() throws {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)

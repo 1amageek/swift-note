@@ -4,7 +4,7 @@ import XCTest
 
 final class CommandLineIntegrationTests: XCTestCase {
     func testCommandLineEmitsTextOutput() throws {
-        let execution = try runSnote(["1 + 2"])
+        let execution = try runSnote(["1", "+", "2"])
 
         XCTAssertEqual(execution.exitCode, 0, execution.stderr)
         XCTAssertEqual(execution.stdout, "1  3\n")
@@ -13,10 +13,7 @@ final class CommandLineIntegrationTests: XCTestCase {
     func testCommandLineEmitsDecodableJSONOutput() throws {
         let execution = try runSnote([
             "--json",
-            """
-            let numbers = [1, 2, 3]
-            numbers.count
-            """,
+            "let numbers = [1, 2, 3]\nnumbers.count",
         ])
 
         XCTAssertEqual(execution.exitCode, 0, execution.stderr)
@@ -74,7 +71,6 @@ final class CommandLineIntegrationTests: XCTestCase {
         let execution = try runSnote([
             "--package",
             packageURL.path,
-            "-e",
             """
             import HelperLib
             makeValue()
