@@ -11,7 +11,7 @@ final class CommandLineIntegrationTests: XCTestCase {
     }
 
     func testCommandLineTreatsEscapedLineBreakAsEvalLineBreak() throws {
-        let execution = try runSnote(["-e", "let x = 10\\n x * 2"])
+        let execution = try runSnote(["let x = 10\\n x * 2"])
 
         XCTAssertEqual(execution.exitCode, 0, execution.stderr)
         XCTAssertEqual(execution.stdout, "1  x = 10\n2  20\n")

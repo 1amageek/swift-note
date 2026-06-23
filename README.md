@@ -169,12 +169,10 @@ snote '1 + 2'
 ```text
 Usage:
   snote <code>
-  snote -e <code>
   snote <file>
   snote --stdin
 
 Options:
-  -e, --eval <code>       Evaluate Swift code
   -f, --file <path>       Evaluate a Swift file
       --stdin             Read Swift code from stdin
       --json              Emit JSON output

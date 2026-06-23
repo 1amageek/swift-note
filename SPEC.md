@@ -6,7 +6,7 @@
 
 | Area | Requirement |
 |---|---|
-| Command | `snote <code>`, `snote -e <code>`, `snote <file>`, `snote --stdin`, `snote --json`, `snote --watch <file>` |
+| Command | `snote <code>`, `snote <file>`, `snote --stdin`, `snote --json`, `snote --watch <file>` |
 | Input | Swift top-level code with imports, declarations, `let` / `var` bindings, and expression statements |
 | Eval line breaks | In eval code, `\n` outside Swift string literals is normalized to a source line break |
 | Observation | Top-level `let` / `var` bindings and top-level expression statements are recorded in source order |

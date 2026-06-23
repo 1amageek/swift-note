@@ -2,18 +2,29 @@ import XCTest
 @testable import SwiftNoteCore
 
 final class ArgumentParserTests: XCTestCase {
-    func testParsesEvalJSONAndPackageOptions() throws {
+    func testParsesPositionalJSONAndPackageOptions() throws {
         let configuration = try ArgumentParser().parse(arguments: [
             "--json",
             "--package",
             ".",
-            "-e",
             "let a = 1; a + 2",
         ])
 
         XCTAssertEqual(configuration.outputFormat, .json)
         XCTAssertEqual(configuration.packagePath, ".")
         XCTAssertEqual(configuration.inputMode, .eval("let a = 1; a + 2"))
+    }
+
+    func testParsesDoubleDashCodeAsEval() throws {
+        let configuration = try ArgumentParser().parse(arguments: ["--", "-1", "+", "2"])
+
+        XCTAssertEqual(configuration.inputMode, .eval("-1 + 2"))
+    }
+
+    func testParsesEvalAliasForCompatibility() throws {
+        let configuration = try ArgumentParser().parse(arguments: ["--eval", "1 + 2"])
+
+        XCTAssertEqual(configuration.inputMode, .eval("1 + 2"))
     }
 
     func testParsesPositionalCodeAsEval() throws {
@@ -44,7 +55,7 @@ final class ArgumentParserTests: XCTestCase {
     }
 
     func testRejectsConflictingInputModes() throws {
-        XCTAssertThrowsError(try ArgumentParser().parse(arguments: ["--stdin", "-e", "1 + 2"])) { error in
+        XCTAssertThrowsError(try ArgumentParser().parse(arguments: ["--stdin", "1 + 2"])) { error in
             XCTAssertEqual(error as? SwiftNoteError, .conflictingInputModes)
         }
     }

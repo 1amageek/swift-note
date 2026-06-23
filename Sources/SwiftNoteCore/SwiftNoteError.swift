@@ -16,7 +16,7 @@ public enum SwiftNoteError: Error, Equatable, CustomStringConvertible {
     public var description: String {
         switch self {
         case .missingInput:
-            "No Swift input was provided. Use -e, --file, --stdin, or pipe code to stdin."
+            "No Swift input was provided. Pass Swift code, a file path, --stdin, or piped code."
         case .conflictingInputModes:
             "Only one input mode can be used at a time."
         case .missingOptionValue(let option):

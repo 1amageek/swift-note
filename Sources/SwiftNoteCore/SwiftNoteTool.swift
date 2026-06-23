@@ -1,7 +1,7 @@
 import Foundation
 
 public struct SwiftNoteTool: Sendable {
-    public static let version = "0.1.2"
+    public static let version = "0.1.3"
 
     private let argumentParser: ArgumentParser
     private let inputResolver: InputResolver
@@ -72,12 +72,10 @@ public struct SwiftNoteTool: Sendable {
     public static let helpText = """
     Usage:
       snote <code>
-      snote -e <code>
       snote <file>
       snote --stdin
 
     Options:
-      -e, --eval <code>       Evaluate Swift code
       -f, --file <path>       Evaluate a Swift file
           --stdin             Read Swift code from stdin
           --json              Emit JSON output

@@ -16,6 +16,13 @@ public struct ArgumentParser: Sendable {
                 configuration.showHelp = true
             case "--version":
                 configuration.showVersion = true
+            case "--":
+                index += 1
+                while index < arguments.count {
+                    positionals.append(arguments[index])
+                    index += 1
+                }
+                continue
             case "--json":
                 configuration.outputFormat = .json
             case "--watch":
@@ -56,6 +63,10 @@ public struct ArgumentParser: Sendable {
             index += 1
         }
 
+        if configuration.inputMode != nil, !positionals.isEmpty {
+            throw SwiftNoteError.conflictingInputModes
+        }
+
         if configuration.inputMode == nil, !positionals.isEmpty {
             configuration.inputMode = inferInputMode(from: positionals)
         }
@@ -81,4 +92,3 @@ public struct ArgumentParser: Sendable {
         return .eval(positionals.joined(separator: " "))
     }
 }
-
